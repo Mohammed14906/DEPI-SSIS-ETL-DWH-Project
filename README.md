@@ -4,49 +4,50 @@ An **SSIS (SQL Server Integration Services)** ETL pipeline that processes teleco
 
 ## 🏗️ Architecture
 
-```
-CSV Source Files ──► Foreach Loop Container ──► Flat File Source
-                                                     │
-                                                     ▼
-                                              Derived Columns
-                                            (TAC & SNR from IMEI)
-                                                     │
-                                                     ▼
-                                                  Lookup
-                                          (dim_imsi_reference)
-                                                     │
-                                              ┌──────┴──────┐
-                                              ▼              ▼
-                                      Handle NULL     fact_transaction
-                                    subscriber_id     (OLE DB Dest)
-                                                          │
-                                                     Error Output
-                                                          ▼
-                                              error_destination_output
-```
+### Control Flow
+
+The package uses a **Foreach Loop Container** that iterates over all CSV files in the source directory, processes them through a Data Flow Task, and writes outputs to the output folder.
+
+![Control Flow](Images/control_flow.png)
+
+### Data Flow
+
+Inside the Foreach Loop, the Data Flow pipeline reads flat files, performs lookups, handles nulls, derives columns, and loads data into SQL Server — with error handling for failed inserts.
+
+![Data Flow](Images/data_flow.png)
 
 ### Data Flow Summary
 
-1. **Foreach Loop Container** — Iterates over all `*.csv` files in `Source Files/`
-2. **Flat File Source** — Reads pipe-delimited (`|`) CSV data
-3. **Derived Columns** — Extracts TAC (first 8 chars) and SNR (last 6 chars) from IMEI
-4. **Lookup** — Joins on `imsi` against `dim_imsi_reference` to get `subscriber_id`
-5. **Fact Transaction Loading** — Inserts valid records into `fact_transaction`
-6. **Error Output** — Redirects failed inserts to `error_destination_output`
+1. **Batch Input CSV** — Reads pipe-delimited (`|`) CSV data via Flat File Source
+2. **Lookup** — Joins on `imsi` against `dim_imsi_reference` to get `subscriber_id`
+3. **Handle NULL subscription ID** — Handles records where the lookup returned no match
+4. **TAC and SNR columns** — Derives TAC (first 8 chars) and SNR (last 6 chars) from IMEI
+5. **Fact Transaction Loading into SQL** — Inserts valid records into `fact_transaction`
+6. **Error destination output** — Redirects failed inserts to `error_destination_output`
 
 ## 📊 Source Data Schema
 
-Files are pipe-delimited (`|`) with the following columns:
+The source CSV files are pipe-delimited with the following column definitions:
 
-| Column | Type | Description |
-|--------|------|-------------|
-| `id` | INT | Transaction ID |
-| `imsi` | VARCHAR(9) | International Mobile Subscriber Identity |
-| `imei` | VARCHAR(14) | International Mobile Equipment Identity |
-| `cell` | INT | Cell tower ID |
-| `lac` | INT | Location Area Code |
-| `event_type` | VARCHAR(1) | Event type code |
-| `event_ts` | DATETIME | Event timestamp |
+![Source Data Schema](Images/source_data_schema.png)
+
+## 🔄 Mapping Rules
+
+Each source column is transformed according to specific mapping rules before loading into the target model:
+
+![Mapping Rules](Images/mapping_rules.png)
+
+## 🗄️ Database Schema
+
+The ETL pipeline uses three tables in `SSIS_Telecom_DB`:
+
+![Database Diagram](Images/database_diagram.png)
+
+| Table | Purpose |
+|-------|---------|
+| `fact_transaction` | Main fact table for telecom CDR transactions |
+| `error_destination_output` | Stores records that failed during ETL loading |
+| `dim_imsi_reference` | Dimension/lookup table mapping IMSI to subscriber IDs |
 
 ## 🚀 Getting Started
 
@@ -96,6 +97,7 @@ DEPI SSIS ETL DWH Project/
 │   ├── batch_01_file_01.csv ... 05
 │   └── batch_02_file_01.csv ... 05
 ├── Output Files/                        # ETL output directory
+├── Images/                              # Documentation images
 ├── DEPI SSIS ETL DWH Project/          # SSIS project
 │   ├── Package.dtsx                     # Main SSIS package
 │   ├── DEPI SSIS ETL DWH Project.dtproj
@@ -106,14 +108,6 @@ DEPI SSIS ETL DWH Project/
 ├── README.md
 └── .gitignore
 ```
-
-## 🗄️ Database Tables
-
-| Table | Purpose |
-|-------|---------|
-| `fact_transaction` | Main fact table for telecom CDR transactions |
-| `error_destination_output` | Stores records that failed during ETL loading |
-| `dim_imsi_reference` | Dimension/lookup table mapping IMSI to subscriber IDs |
 
 ## 📝 License
 
