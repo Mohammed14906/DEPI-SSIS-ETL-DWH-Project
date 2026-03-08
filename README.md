@@ -8,13 +8,17 @@ An **SSIS (SQL Server Integration Services)** ETL pipeline that processes teleco
 
 The package uses a **Foreach Loop Container** that iterates over all CSV files in the source directory, processes them through a Data Flow Task, and writes outputs to the output folder.
 
-![Control Flow](Images/control_flow.png)
+<p align="center">
+  <img src="Images/control_flow.png" alt="Control Flow" />
+</p>
 
 ### Data Flow
 
 Inside the Foreach Loop, the Data Flow pipeline reads flat files, performs lookups, handles nulls, derives columns, and loads data into SQL Server — with error handling for failed inserts.
 
-![Data Flow](Images/data_flow.png)
+<p align="center">
+  <img src="Images/data_flow.png" alt="Data Flow" />
+</p>
 
 ### Data Flow Summary
 
@@ -29,19 +33,25 @@ Inside the Foreach Loop, the Data Flow pipeline reads flat files, performs looku
 
 The source CSV files are pipe-delimited with the following column definitions:
 
-![Source Data Schema](Images/source_data_schema.png)
+<p align="center">
+  <img src="Images/source_data_schema.png" alt="Source Data Schema" />
+</p>
 
 ## 🔄 Mapping Rules
 
 Each source column is transformed according to specific mapping rules before loading into the target model:
 
-![Mapping Rules](Images/mapping_rules.png)
+<p align="center">
+  <img src="Images/mapping_rules.png" alt="Mapping Rules" />
+</p>
 
 ## 🗄️ Database Schema
 
 The ETL pipeline uses three tables in `SSIS_Telecom_DB`:
 
-![Database Diagram](Images/database_diagram.png)
+<p align="center">
+  <img src="Images/database_diagram.png" alt="Database Diagram" />
+</p>
 
 | Table | Purpose |
 |-------|---------|
